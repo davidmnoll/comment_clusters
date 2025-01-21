@@ -1,0 +1,10 @@
+numpy
+torch
+requests
+scikit-learn
+fastapi
+networkx
+python-louvain
+matplotlib
+graphviz
+uvicorn[standard]
