@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, Dict, Any, AsyncGenerator
 import os
 from comment_tree import CommentTree
+import asyncio
 
 app = FastAPI()
 
@@ -18,31 +19,28 @@ app.add_middleware(
 )
 
 
+
 @app.get("/")
 async def get_root_comment() -> Dict:
     """Get the root comment with its children"""
-    tree = await CommentTree.loadFileOrFetch()
-    if tree.root:
-      await tree.root.load_raw_comments()
-    else: 
-      raise HTTPException(status_code=500, detail="Failed to load root comment")
+    tree = CommentTree()
+    if not tree:
+       raise HTTPException(status_code=500, detail="Failed to load root comment")
+    if not tree.table['']:
+        raise HTTPException(status_code=500, detail="Root comment not found")
 
-    if not tree.root:
-        await tree.load_top_story()
-    if not tree.root:
-        raise HTTPException(status_code=500, detail="Failed to load root comment")
-    return tree.root.to_dict()
+    return tree.table[''].to_dict()
 
 @app.get("/{path}")
 async def get_comment_info(
     path: str,
 ) -> Dict:
     """Get metadata about a specific comment"""
-    tree = await CommentTree.loadFileOrFetch()
-    if tree.root:
-      await tree.root.load_raw_comments()
-    else: 
-      raise HTTPException(status_code=500, detail="Failed to load root comment")
+    tree = CommentTree()
+    if not tree:
+       raise HTTPException(status_code=500, detail="Failed to load root comment")
+    if not tree.table['']:
+        raise HTTPException(status_code=500, detail="Root comment not found")
 
     try:
         comment = await tree.get_comment_by_path(path)
@@ -57,16 +55,16 @@ async def get_comment_info(
 @app.get("/info")
 async def health_check():
     """Health check endpoint with usage information"""
-    tree = await CommentTree.loadFileOrFetch()
-    if tree.root:
-      await tree.root.load_raw_comments()
-    else: 
-      raise HTTPException(status_code=500, detail="Failed to load root comment")
+    tree = CommentTree()
+    if not tree:
+       raise HTTPException(status_code=500, detail="Failed to load root comment")
+    if not tree.table['']:
+        raise HTTPException(status_code=500, detail="Root comment not found")
 
 
     cluster_status = {
-        "kmeans": tree.root and hasattr(tree.root, 'kmeans_clusters') and bool(tree.root.kmeans_clusters),
-        "louvain": tree.root and hasattr(tree.root, 'louvain_clusters') and bool(tree.root.louvain_clusters),
+        "kmeans": tree.table[''] and hasattr(tree.table[''], 'kmeans_clusters') and bool(tree.table[''].kmeans_clusters),
+        "louvain": tree.table[''] and hasattr(tree.table[''], 'louvain_clusters') and bool(tree.table[''].louvain_clusters),
     }
     
     return {
@@ -88,5 +86,11 @@ if os.path.exists(static_files_dir):
     app.mount("/", StaticFiles(directory=static_files_dir, html=True), name="frontend")
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # import sys
+    # if len(sys.argv) > 1 and sys.argv[1] == "generate":
+    async def generate_comment_tree():
+        await CommentTree().generate()
+    
+    asyncio.run(generate_comment_tree())
+    # else:
+    #     uvicorn.run(app, host="0.0.0.0", port=8000)

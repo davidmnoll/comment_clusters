@@ -12,11 +12,11 @@ install: $(VENV_DIR)/bin/activate
 	cd frontend && npm install
 	cd backend && $(PYTHON) -m pip install -r requirements.txt
 
-build:
+build-frontend:
 	cd frontend && npm run build
 
 run: $(VENV_DIR)/bin/activate frontend/dist
-	cd backend && .venv/bin/uvicorn api:app --host 0.0.0.0 --port 8000 --reload
+	cd backend && .venv/bin/uvicorn app:app --host 0.0.0.0 --port 8000 --reload
 
 
 run-build: $(VENV_DIR)/bin/activate
@@ -24,15 +24,10 @@ run-build: $(VENV_DIR)/bin/activate
 	cd backend && .venv/bin/python cluster_comments.py
 	make run
 
-prep: $(VENV_DIR)/bin/activate
+prep-backend: $(VENV_DIR)/bin/activate
 	make run-fetch
 	make run-cluster
 
-run-fetch: $(VENV_DIR)/bin/activate
-	cd backend && .venv/bin/python hn_fetcher.py
-
-run-cluster: $(VENV_DIR)/bin/activate
-	cd backend && .venv/bin/python cluster_comments.py
 
 dev:
 	cd frontend && npm run dev

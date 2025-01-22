@@ -10,7 +10,7 @@ const queryClient = new QueryClient();
 function AppContent() {
   const [path, setPath] = useState('');
   const [showClusters, setShowClusters] = useState(true);
-  const [clusterMethod, setClusterMethod] = useState<'kmeans' | 'louvain' | 'raw'>('kmeans');
+  const [clusterMethod, setClusterMethod] = useState<'kmeans' | 'louvain' | 'raw'>('raw');
   const { data: comment, isLoading } = useComment(path);
 
 
@@ -62,10 +62,10 @@ function AppContent() {
                       value={clusterMethod}
                       onChange={(e) => setClusterMethod(e.target.value as 'kmeans' | 'louvain')}
                       className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border rounded hover:bg-gray-50"
-                    >
+                      >
+                      <option value="raw">Raw Comments</option>
                       <option value="kmeans">K-Means Clustering</option>
                       <option value="louvain">Louvain Clustering</option>
-                      <option value="raw">Raw Comments</option>
                     </select>
                     {clusterMethod === 'kmeans' ? (
                       comment.kmeans_clusters?.map((cluster, i) => (
